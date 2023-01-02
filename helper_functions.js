@@ -260,26 +260,26 @@ export class TransitionsManager {
 
 // create a gsap transition taking customVars into consideration
 export function createTransition(target, gsapVars, customVars) {
-  const transition = gsap.to(target, { ...gsapVars, paused: true });
+  const transition = gsap.to(target, { ...gsapVars});
 
   // modify transition properties if necessary
   if (customVars) {
     if (customVars.autoHideOnReverseComplete === true) {
       transition.eventCallback("onReverseComplete", () => {
         if (gsapVars.onReverseComplete) gsapVars.onReverseComplete();
-        d3.select(target).style("display", "none");
+        d3.selectAll(target).style("display", "none");
       });
 
       transition.eventCallback("onStart", () => {
         if (gsapVars.onStart) gsapVars.onStart();
-        d3.select(target).style("display", "block");
+        d3.selectAll(target).style("display", "block");
       });
     }
 
     if (customVars.autoHideOnComplete === true) {
       transition.eventCallback("onComplete", () => {
         if (gsapVars.onComplete) gsapVars.onComplete();
-        d3.select(target).style("display", "none");
+        d3.selectAll(target).style("display", "none");
       });
     }
 
@@ -295,7 +295,7 @@ export function createTransition(target, gsapVars, customVars) {
         transition.data.back = true;
         if (onReverseStartCopy) onReverseStartCopy();
         if (customVars.autoHideOnComplete === true)
-          d3.select(target).attr("style", "block");
+          d3.selectAll(target).attr("style", "block");
       };
     }
 
@@ -317,7 +317,6 @@ export function createTransition(target, gsapVars, customVars) {
     });
   }
 
-  transition.play();
   return transition;
 }
 

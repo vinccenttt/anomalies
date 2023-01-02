@@ -1,5 +1,5 @@
 import { createTransition, TransitionsManager } from "./helper_functions.js";
-let dataBaseline, data, viewBox, svg, xScale, yScale, dataToCoCompareTo;
+let dataBaseline, data, viewBox, svg, xScale, yScale, dataToCoCompareTo, calculateColorScaleValue;
 fetch("./data/dataBaseline.json")
   .then((response) => response.json())
   .then((json) => {
@@ -22,6 +22,7 @@ const drawFunctions = [
   drawStep5,
   drawStep52,
   drawStep6,
+  drawStep7,
 ];
 const onProgressUpdate = (progress, isReversed) => {
   console.log(progress);
@@ -32,30 +33,49 @@ const onProgressUpdate = (progress, isReversed) => {
 };
 const m1 = new TransitionsManager(drawFunctions, 0.2);
 
+
+
 function setUpVariables() {
+  calculateColorScaleValue = (anomaly) => {
+    const redScale = d3
+      .scaleLinear()
+      .domain([0, d3.max(data, (d) => d.anomaly)])
+      .range([0.5, 0]);
+
+    const blueScale = d3
+      .scaleLinear()
+      .domain([d3.min(data, (d) => d.anomaly), 0])
+      .range([1, 0.5]);
+
+    if (anomaly > 0) return redScale(anomaly);
+    else return blueScale(anomaly);
+  }
+
+
   dataToCoCompareTo = data.filter((e) => e.year === 1878);
 
-  viewBox = { width: 600, height: 300, padding: 30 };
+  viewBox = { width: 550, height: 550, padding: 30 };
   svg = d3
     .select("#visualization")
     .append("svg")
     .attr("viewBox", [0, 0, viewBox.width, viewBox.height]);
 
   const mean = d3.mean(dataBaseline, (d) => d.temp);
-  let temps = dataToCoCompareTo.map((obj) => obj.anomaly + dataBaseline[obj.month-1].temp);
-  const tempExtrema = {max: d3.max(temps), min: d3.min(temps) };
+  let temps = dataToCoCompareTo.map(
+    (obj) => obj.anomaly + dataBaseline[obj.month - 1].temp
+  );
+  const tempExtrema = { max: d3.max(temps), min: d3.min(temps) };
 
   yScale = d3
     .scaleLinear()
-    .range([viewBox.height - viewBox.padding, 1.5]) // add half stroke width
+    .range([viewBox.height - viewBox.padding, 150]) // add half stroke width
     .domain([
-      12,
+      10,
       d3.max([
         mean + d3.max(dataToCoCompareTo, (d) => d.anomaly),
         tempExtrema.max,
-        d3.max(dataBaseline, d => d.temp)
-      ]
-      ),
+        d3.max(dataBaseline, (d) => d.temp),
+      ]),
     ]);
 
   xScale = d3
@@ -157,15 +177,9 @@ function drawStep3() {
   const path = d3.path();
   dataToCoCompareTo.map((d, i) => {
     if (i === 0) {
-      path.moveTo(
-        xScale(d.month),
-        yScale(dataBaseline[i].temp + d.anomaly)
-      );
+      path.moveTo(xScale(d.month), yScale(dataBaseline[i].temp + d.anomaly));
     } else {
-      path.lineTo(
-        xScale(d.month),
-        yScale(dataBaseline[i].temp + d.anomaly)
-      );
+      path.lineTo(xScale(d.month), yScale(dataBaseline[i].temp + d.anomaly));
     }
     path.lineTo(
       xScale(d.month) + xScale.bandwidth(),
@@ -300,20 +314,7 @@ function drawStep5() {
 }
 
 function drawStep52() {
-  function calculateColorScaleValue(anomaly) {
-    const redScale = d3
-      .scaleLinear()
-      .domain([0, d3.max(dataToCoCompareTo, (d) => d.anomaly)])
-      .range([0.5, 0]);
 
-    const blueScale = d3
-      .scaleLinear()
-      .domain([d3.min(dataToCoCompareTo, (d) => d.anomaly), 0])
-      .range([1, 0.5]);
-
-    if (anomaly > 0) return redScale(anomaly);
-    else return blueScale(anomaly);
-  }
   d3.selectAll("#filling-rects rect").gsapTo(m1, (d, i) => {
     return {
       attr: {
@@ -342,4 +343,121 @@ function drawStep6() {
   // remove anomaly axis and baseline
   d3.select("#baseline").gsapTo(m1, { opacity: 0 });
   d3.select("#anomaly-axis").gsapTo(m1, { opacity: 0 });
+}
+
+function drawStep7() {
+  const yScale = d3
+    .scaleBand()
+    .range([30, viewBox.height - viewBox.padding])
+    .domain(data.map((d) => d.year));
+
+
+
+  // one group for each year
+  // from: https://stackoverflow.com/questions/14446511/most-efficient-method-to-groupby-on-an-array-of-objects
+  const groupBy = (items, key) =>
+    items.reduce(
+      (result, item) => ({
+        ...result,
+        [item[key]]: [...(result[item[key]] || []), item],
+      }),
+      {}
+    );
+
+  const groupedByYearMap = groupBy(data, "year");
+
+  const yearGroups = svg
+    .selectAll(".year-group")
+    .data(Object.keys(groupedByYearMap))
+    .enter()
+    .append("g")
+    .attr("class", "year-group")
+    .attr("opacity", 0);
+
+  yearGroups
+    .append("text")
+    .text((d) => d)
+    .attr("font-size", "0.7em")
+    .attr("x", 14)
+    .attr("y", (d) => yScale(parseInt(d)) + 4)
+    .attr("text-anchor", "middle")
+    .attr("opacity", (d, i) =>
+      i === 0 || i === Object.keys(groupedByYearMap).length - 1 ? 0.35 : 0
+    );
+
+  yearGroups
+    .on("mouseover", function () {
+      d3.select(this).attr("stroke", "black");
+      d3.select(this).select("text").attr("opacity", 1);
+    })
+    .on("mouseout", function (event, d) {
+      d3.select(this).attr("stroke", null);
+
+      const i = Object.keys(groupedByYearMap).indexOf(d);
+      d3.select(this)
+        .select("text")
+        .attr(
+          "opacity",
+          i === 0 || i === Object.keys(groupedByYearMap).length - 1 ? 0.35 : 0
+        );
+    });
+
+  yearGroups
+    .selectAll("rect")
+    .data((d) => groupedByYearMap[d])
+    .enter()
+    .append("rect")
+    .attr("x", (d) => xScale(d.month))
+    .attr("y", (d) => yScale(d.year))
+    .attr("width", xScale.bandwidth())
+    .attr("height", yScale.bandwidth())
+    .attr("fill", (d) =>
+      d.year === 1878
+        ? "#808080"
+        : d3.interpolateRdBu(calculateColorScaleValue(d.anomaly))
+    );
+
+  const timeline = gsap.timeline();
+
+  // move current line of blocks to the top
+  timeline.add(
+    gsap.to("#filling-rects rect", {
+      attr: { height: 10, y: 0 },
+    })
+  );
+
+  // move x-axis to the bottm
+  timeline.add(
+    gsap.to("#x-axis", {
+      duration: 0.5,
+      attr: { transform: `translate(0,${viewBox.height - viewBox.padding})` },
+    }),
+    "<"
+  );
+
+  // build chart
+  timeline.add(
+    gsap.to(".year-group", { attr: { opacity: 1 }, stagger: 0.004 })
+  );
+
+  d3.select("#filling-rects").raise(); // move to front
+  const missingLine = yearGroups.filter((d) => d === "1878").selectAll("rect");
+
+  // transition block line to missing space
+  timeline.add(
+    createTransition(
+      "#filling-rects rect",
+      {
+        onComplete: () => {
+          missingLine.attr("fill", (d) =>
+            d3.interpolateRdBu(calculateColorScaleValue(d.anomaly))
+          );
+        },
+        attr: { y: yScale(1878), height: yScale.bandwidth() },
+      },
+      { autoHideOnComplete: true,
+      onReverseStart: () => missingLine.attr("fill", "#808080") }
+    )
+  );
+  m1.push(timeline);
 }
