@@ -324,7 +324,7 @@ function drawStep5() {
     .gsapTo(m1, { opacity: 1 });
 
   // translate x-axis upwards
-  svg.select("#x-axis").gsapTo(m1, {
+  svg.select("#x-axis").lower().gsapTo(m1, {
     attr: {
       transform: `translate(0,${yScale(
         mean + d3.min(dataToCoCompareTo, (d) => d.anomaly)
@@ -365,7 +365,7 @@ function drawStep6() {
       "y",
       (d) => yScale(d3.mean(dataBaseline, (d, i) => dataBaseline[i].temp)) + 3.5
     )
-    .gsapTo(m1, { attr: { opacity: 1 } });
+    .gsapTo(m1, {  opacity: 1  }, {});
 
   svg.select("#x-axis").gsapTo(m1, {
     attr: {
@@ -536,7 +536,7 @@ function drawStep7() {
         attr: { y: yScale(selectedYear) + 4 },
         onComplete: () => {
           gsap.to("#filling-rects text", {
-            attr: { opacity: 0.35 },
+            opacity: 0.35,
             duration: 2,
           });
         },
