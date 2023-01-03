@@ -15,9 +15,6 @@
   display: none;
 }
 
-.nav-button:focus {
-  background-color: black;
-}
 .nav-button:hover {
   background-color: black;
 }
