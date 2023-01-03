@@ -9,6 +9,12 @@
   cursor: pointer;
 }
 
+.text {
+  text-align: justify;
+  margin: 0px;
+  display: none;
+}
+
 .nav-button:focus {
   background-color: black;
 }

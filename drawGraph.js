@@ -1,4 +1,8 @@
 import { createTransition, TransitionsManager } from "./helper_functions.js";
+
+
+
+
 let dataBaseline,
   data,
   viewBox,
@@ -20,6 +24,7 @@ fetch("./data/dataBaseline.json")
         setUpVariables();
         setUpNavigation();
         m1.drawNextStep();
+        showText();
       });
   });
 
@@ -41,6 +46,11 @@ const onProgressUpdate = (progress, isReversed) => {
     .attr("fill", isReversed ? "#123456" : "#ff0000");
 };
 const m1 = new TransitionsManager(drawFunctions, 0.2);
+
+function showText(){
+  d3.selectAll("#text-div .text").style("display", "none");
+  d3.select("#text-" + m1.getStep()).style("display", "inline");
+}
 
 function setUpVariables() {
   calculateColorScaleValue = (anomaly) => {
@@ -99,8 +109,10 @@ function setUpNavigation() {
     const id = d3.select(this).attr("id");
     if (id === "next" && m1.getStep() < numberOfSteps - 1) {
       m1.drawNextStep();
+      showText();
     } else if (id === "prev" && m1.getStep() > 0) {
       m1.drawPrevStep();
+      showText();
     }
     document.getElementById("step-" + m1.getStep()).focus();
   });
@@ -109,6 +121,7 @@ function setUpNavigation() {
   for (let i = 0; i < numberOfSteps; i++) {
     d3.selectAll("#step-" + i).on("click", function () {
       m1.drawStep(i);
+      showText();
     });
   }
 
@@ -330,13 +343,16 @@ function drawStep5() {
     .gsapTo(m1, { opacity: 1 });
 
   // translate x-axis upwards
-  svg.select("#x-axis").lower().gsapTo(m1, {
-    attr: {
-      transform: `translate(0,${yScale(
-        mean + d3.min(dataToCoCompareTo, (d) => d.anomaly)
-      )})`,
-    },
-  });
+  svg
+    .select("#x-axis")
+    .lower()
+    .gsapTo(m1, {
+      attr: {
+        transform: `translate(0,${yScale(
+          mean + d3.min(dataToCoCompareTo, (d) => d.anomaly)
+        )})`,
+      },
+    });
 }
 
 function drawStep52() {
@@ -371,7 +387,7 @@ function drawStep6() {
       "y",
       (d) => yScale(d3.mean(dataBaseline, (d, i) => dataBaseline[i].temp)) + 3.5
     )
-    .gsapTo(m1, {  opacity: 1  }, {});
+    .gsapTo(m1, { opacity: 1 }, {});
 
   svg.select("#x-axis").gsapTo(m1, {
     attr: {

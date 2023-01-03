@@ -13,19 +13,37 @@
     <script type="text/javascript" src="d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/gsap.min.js"></script>
   </head>
-  <body
-    style="
-      width: 100%;
-      height: 100%;
-      background-color: rgb(221, 221, 221);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    "
-  >
-    <div style="display: flex">
-      <div style="display: flex; flex-direction: column; align-items: center">
+  <body style="background-color: rgb(221, 221, 221)">
+    <div
+      style="display: flex; gap: 60px; margin-left: 200px; margin-right: 200px; margin-top: 50px; justify-content: center;"
+    >
+      <div id="text-div" style="display: flex; flex-direction: column; width: 30%">
+        <h1 style="margin-bottom: 30px; margin-top: 150px;"> Creating an anomaly heatmap</h1>
+        <span id="text-0" class="text">
+          On the right the <span style="color: blue">averaged temperature</span> per month, calculated from Jan 1951 to Dec 1980, is displayed.
+        </span>
+        <span id="text-1" class="text" >
+          Next we take a closer look at the tempeartures (average values per month) during the year <span style="color: red">1878</span>.
+        </span>
+        <span id="text-2" class="text" >
+          The anomalies on each month are highlighted in red - The anomaly is the difference between the actual temparature and the average temperature.
+        </span>
+        <span id="text-3" class="text" >
+          If we smooth the averaged temperature curve down to a straight line, the differences and absolute values of the anomalies become more clearer.
+        </span>
+        <span id="text-4" class="text" >
+          Next, we color code the anomaly values relative to the lowest and highest anomaly that ever appeared between 1850 and 2020.
+        </span>
+        <span id="text-5" class="text" >
+          As the anomaly value is now coded in color, we remove the y-axis and create rectangles of equal height.
+        </span>
+        <span id="text-6" class="text" >
+          Finally, we repeat step 0 to 5 for every year and display them all at once in a heatmap to be able to identify trends or outliers.
+          <span style="margin-top: 10px; display: block;"><em>If you hover over a rectangle, the corresponding year will be shown. When clicking, you zoom into the selected year to have a more detailed looked at the values.</em></span>
+        </span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center;">
         <div id="visualization" style="width: 550px; height: 550px"></div>
         <div style="display: flex; margin-top: 20px; gap: 10px">
           <button id="prev" class="nav-button">PREV</button>
@@ -41,24 +59,42 @@
           </select> -->
         </div>
 
-        <div style="display: flex; gap: 5px; justify-content: flex-end; margin-bottom: 50px; margin-top: 10px;">
-          <button id="step-0" class="step-button" style="border-top-left-radius: 5px;border-bottom-left-radius: 5px;">0</button>
+        <div
+          style="
+            display: flex;
+            gap: 5px;
+            justify-content: flex-end;
+            margin-bottom: 50px;
+            margin-top: 10px;
+          "
+        >
+          <button
+            id="step-0"
+            class="step-button"
+            style="border-top-left-radius: 5px; border-bottom-left-radius: 5px"
+          >
+            0
+          </button>
           <button id="step-1" class="step-button">1</button>
           <button id="step-2" class="step-button">2</button>
           <button id="step-3" class="step-button">3</button>
           <button id="step-4" class="step-button">4</button>
-          <button id="step-5" class="step-button">5</button>     
-          <button id="step-6" class="step-button" style="border-top-right-radius: 5px;border-bottom-right-radius: 5px;">6</button>
+          <button id="step-5" class="step-button">5</button>
+          <button
+            id="step-6"
+            class="step-button"
+            style="
+              border-top-right-radius: 5px;
+              border-bottom-right-radius: 5px;
+            "
+          >
+            6
+          </button>
         </div>
         <!-- <p id="step">0</p> -->
       </div>
-
-
     </div>
-    
-    <script
-      type="module"
-      src="./drawGraph.js"
-    ></script>
+
+    <script type="module" src="./drawGraph.js"></script>
   </body>
 </html>
