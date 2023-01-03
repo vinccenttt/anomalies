@@ -1,5 +1,14 @@
 import { createTransition, TransitionsManager } from "./helper_functions.js";
-let dataBaseline, data, viewBox, svg, xScale, yScale, dataToCoCompareTo, calculateColorScaleValue;
+let dataBaseline,
+  data,
+  viewBox,
+  svg,
+  xScale,
+  yScale,
+  dataToCoCompareTo,
+  calculateColorScaleValue;
+const selectedYear = 1878;
+
 fetch("./data/dataBaseline.json")
   .then((response) => response.json())
   .then((json) => {
@@ -33,8 +42,6 @@ const onProgressUpdate = (progress, isReversed) => {
 };
 const m1 = new TransitionsManager(drawFunctions, 0.2);
 
-
-
 function setUpVariables() {
   calculateColorScaleValue = (anomaly) => {
     const redScale = d3
@@ -49,10 +56,9 @@ function setUpVariables() {
 
     if (anomaly > 0) return redScale(anomaly);
     else return blueScale(anomaly);
-  }
+  };
 
-
-  dataToCoCompareTo = data.filter((e) => e.year === 1878);
+  dataToCoCompareTo = data.filter((e) => e.year === selectedYear);
 
   viewBox = { width: 550, height: 550, padding: 30 };
   svg = d3
@@ -68,7 +74,7 @@ function setUpVariables() {
 
   yScale = d3
     .scaleLinear()
-    .range([viewBox.height - viewBox.padding, 150]) // add half stroke width
+    .range([viewBox.height - viewBox.padding, 200]) // add half stroke width
     .domain([
       10,
       d3.max([
@@ -167,7 +173,7 @@ function drawStep0() {
     .attr("d", path)
     .attr("fill", "none")
     .attr("stroke", "blue")
-    .attr("stroke-width", 3);
+    .attr("stroke-width", 2);
 
   animatePath(renderedPath);
 }
@@ -192,7 +198,7 @@ function drawStep3() {
     .attr("d", path)
     .attr("fill", "none")
     .attr("stroke", "red")
-    .attr("stroke-width", 3);
+    .attr("stroke-width", 2);
 
   animatePath(renderedPath);
 }
@@ -220,6 +226,10 @@ function drawStep4() {
     })
     .attr("opacity", 0)
     .gsapTo(m1, { attr: { opacity: 1 } });
+
+  svg.select("#baseline").raise();
+
+  svg.select("#redPath").raise();
 }
 
 function drawStep5() {
@@ -240,7 +250,9 @@ function drawStep5() {
   });
 
   // transition
-  svg.select("#baseline").gsapTo(m1, { attr: { d: blueMeanPath } });
+  svg
+    .select("#baseline")
+    .gsapTo(m1, { attr: { d: blueMeanPath }, strokeWidth: 1.3 });
 
   // create new red path to transition to
   const newRedPath = d3.path();
@@ -263,24 +275,32 @@ function drawStep5() {
   });
 
   // transition
-  svg.select("#redPath").gsapTo(m1, { attr: { d: newRedPath }, opacity: 0 });
+  svg
+    .select("#redPath")
+    .gsapTo(
+      m1,
+      { attr: { d: newRedPath }, opacity: 0 },
+      { autoHideOnComplete: true }
+    );
 
   // transition filling rects
   svg.selectAll("#filling-rects rect").gsapTo(m1, (d, i) => {
     const temp = dataBaseline[i].temp + d.anomaly;
     if (dataBaseline[i].temp > temp) {
-      return { attr: { y: yScale(mean) + 1.5 } };
+      return { attr: { y: yScale(mean) } };
     } else {
-      return { attr: { y: yScale(mean + d.anomaly) - 1.5 } };
+      return { attr: { y: yScale(mean + d.anomaly) } };
     }
   });
 
   svg
     .selectAll("#filling-rects rect")
-    .gsapTo(m1, { attr: { fill: "#ff000050" } });
+    .gsapTo(m1, { attr: { fill: "#ff000050", stroke: "#ff0000" } });
 
   // transition y-axis
-  d3.select("#y-axis").gsapTo(m1, { opacity: 0 });
+  svg
+    .select("#y-axis")
+    .gsapTo(m1, { opacity: 0 }, { autoHideOnComplete: true });
 
   // create anomaly scale
   const yScaleAnomaly = d3
@@ -304,7 +324,7 @@ function drawStep5() {
     .gsapTo(m1, { opacity: 1 });
 
   // translate x-axis upwards
-  d3.select("#x-axis").gsapTo(m1, {
+  svg.select("#x-axis").gsapTo(m1, {
     attr: {
       transform: `translate(0,${yScale(
         mean + d3.min(dataToCoCompareTo, (d) => d.anomaly)
@@ -314,8 +334,7 @@ function drawStep5() {
 }
 
 function drawStep52() {
-
-  d3.selectAll("#filling-rects rect").gsapTo(m1, (d, i) => {
+  svg.selectAll("#filling-rects rect").gsapTo(m1, (d, i) => {
     return {
       attr: {
         fill: d3.interpolateRdBu(calculateColorScaleValue(d.anomaly)),
@@ -326,13 +345,29 @@ function drawStep52() {
 
 function drawStep6() {
   // transition filling rects to all have the same height
-  d3.selectAll("#filling-rects rect").gsapTo(m1, {
+  svg.selectAll("#filling-rects rect").gsapTo(m1, {
     attr: {
       y: yScale(d3.mean(dataBaseline, (d, i) => dataBaseline[i].temp)) - 10,
       height: 20,
+      stroke: "#00000000",
     },
   });
-  d3.select("#x-axis").gsapTo(m1, {
+
+  svg
+    .select("#filling-rects")
+    .append("text")
+    .attr("text-anchor", "middle")
+    .text(selectedYear)
+    .attr("font-size", "0.7em")
+    .attr("opacity", 0)
+    .attr("x", 14)
+    .attr(
+      "y",
+      (d) => yScale(d3.mean(dataBaseline, (d, i) => dataBaseline[i].temp)) + 3.5
+    )
+    .gsapTo(m1, { attr: { opacity: 1 } });
+
+  svg.select("#x-axis").gsapTo(m1, {
     attr: {
       transform: `translate(0,${
         yScale(d3.mean(dataBaseline, (d) => d.temp)) + 10
@@ -341,8 +376,12 @@ function drawStep6() {
   });
 
   // remove anomaly axis and baseline
-  d3.select("#baseline").gsapTo(m1, { opacity: 0 });
-  d3.select("#anomaly-axis").gsapTo(m1, { opacity: 0 });
+  svg
+    .select("#baseline")
+    .gsapTo(m1, { opacity: 0 }, { autoHideOnComplete: true });
+  svg
+    .select("#anomaly-axis")
+    .gsapTo(m1, { opacity: 0 }, { autoHideOnComplete: true });
 }
 
 function drawStep7() {
@@ -350,8 +389,6 @@ function drawStep7() {
     .scaleBand()
     .range([30, viewBox.height - viewBox.padding])
     .domain(data.map((d) => d.year));
-
-
 
   // one group for each year
   // from: https://stackoverflow.com/questions/14446511/most-efficient-method-to-groupby-on-an-array-of-objects
@@ -367,6 +404,8 @@ function drawStep7() {
   const groupedByYearMap = groupBy(data, "year");
 
   const yearGroups = svg
+    .append("g")
+    .attr("id", "heatmap")
     .selectAll(".year-group")
     .data(Object.keys(groupedByYearMap))
     .enter()
@@ -385,13 +424,25 @@ function drawStep7() {
       i === 0 || i === Object.keys(groupedByYearMap).length - 1 ? 0.35 : 0
     );
 
+  yearGroups.on("click", function () {
+    d3.select(this).raise();
+    d3.select(this)
+      .selectAll("rect")
+      .attr("height", 20)
+      .attr("y", (d) => yScale(d.year) - 10);
+  });
   yearGroups
     .on("mouseover", function () {
       d3.select(this).attr("stroke", "black");
+
       d3.select(this).select("text").attr("opacity", 1);
     })
     .on("mouseout", function (event, d) {
       d3.select(this).attr("stroke", null);
+      d3.select(this)
+        .selectAll("rect")
+        .attr("height", yScale.bandwidth())
+        .attr("y", (d) => yScale(d.year));
 
       const i = Object.keys(groupedByYearMap).indexOf(d);
       d3.select(this)
@@ -412,7 +463,7 @@ function drawStep7() {
     .attr("width", xScale.bandwidth())
     .attr("height", yScale.bandwidth())
     .attr("fill", (d) =>
-      d.year === 1878
+      d.year === selectedYear
         ? "#808080"
         : d3.interpolateRdBu(calculateColorScaleValue(d.anomaly))
     );
@@ -426,6 +477,9 @@ function drawStep7() {
     })
   );
 
+  // transition text
+  timeline.add(gsap.to("#filling-rects text", { attr: { y: 8 } }), "<");
+
   // move x-axis to the bottm
   timeline.add(
     gsap.to("#x-axis", {
@@ -437,11 +491,17 @@ function drawStep7() {
 
   // build chart
   timeline.add(
-    gsap.to(".year-group", { attr: { opacity: 1 }, stagger: 0.004 })
+    gsap.to("#heatmap .year-group", {
+      attr: { opacity: 1 },
+      stagger: 0.004,
+      onStart: () => svg.select("#heatmap").style("display", "block"),
+      onReverseComplete: () => svg.select("#heatmap").style("display", "none"),
+    })
   );
 
-  d3.select("#filling-rects").raise(); // move to front
-  const missingLine = yearGroups.filter((d) => d === "1878").selectAll("rect");
+  const missingLine = yearGroups
+    .filter((d) => d == selectedYear)
+    .selectAll("rect");
 
   // transition block line to missing space
   timeline.add(
@@ -453,11 +513,42 @@ function drawStep7() {
             d3.interpolateRdBu(calculateColorScaleValue(d.anomaly))
           );
         },
-        attr: { y: yScale(1878), height: yScale.bandwidth() },
+        onStart: () => {
+          // move to front
+          svg.select("#filling-rects").raise();
+        },
+        onReverseComplete: () => {
+          svg.select("#filling-rects").lower();
+        },
+        attr: { y: yScale(selectedYear), height: yScale.bandwidth() },
       },
-      { autoHideOnComplete: true,
-      onReverseStart: () => missingLine.attr("fill", "#808080") }
+      {
+        autoHideOnComplete: true,
+        onReverseStart: () => missingLine.attr("fill", "#808080"),
+      }
     )
   );
+  // transition text
+  timeline.add(
+    createTransition(
+      "#filling-rects text",
+      {
+        attr: { y: yScale(selectedYear) + 4 },
+        onComplete: () => {
+          gsap.to("#filling-rects text", {
+            attr: { opacity: 0.35 },
+            duration: 2,
+          });
+        },
+      },
+      {
+        onReverseStart: () => {
+          svg.select("#filling-rects text").attr("opacity", 1);
+        },
+      }
+    ),
+    "<"
+  );
+
   m1.push(timeline);
 }

@@ -268,11 +268,13 @@ export function createTransition(target, gsapVars, customVars) {
       transition.eventCallback("onReverseComplete", () => {
         if (gsapVars.onReverseComplete) gsapVars.onReverseComplete();
         d3.selectAll(target).style("display", "none");
+        d3.select(target).style("display", "none");
       });
 
       transition.eventCallback("onStart", () => {
         if (gsapVars.onStart) gsapVars.onStart();
         d3.selectAll(target).style("display", "block");
+        d3.select(target).style("display", "block");
       });
     }
 
@@ -280,6 +282,7 @@ export function createTransition(target, gsapVars, customVars) {
       transition.eventCallback("onComplete", () => {
         if (gsapVars.onComplete) gsapVars.onComplete();
         d3.selectAll(target).style("display", "none");
+        d3.select(target).style("display", "none");
       });
     }
 
@@ -294,8 +297,10 @@ export function createTransition(target, gsapVars, customVars) {
       customVars.onReverseStart = () => {
         transition.data.back = true;
         if (onReverseStartCopy) onReverseStartCopy();
-        if (customVars.autoHideOnComplete === true)
-          d3.selectAll(target).attr("style", "block");
+        if (customVars.autoHideOnComplete === true){
+          d3.selectAll(target).style("display", "block");
+          d3.select(target).style("display", "block");
+        }
       };
     }
 
