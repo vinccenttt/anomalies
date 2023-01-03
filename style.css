@@ -12,3 +12,25 @@
 .nav-button:focus {
   background-color: black;
 }
+.nav-button:hover {
+  background-color: black;
+}
+
+.step-button {
+  color: white;
+  background-color: rgb(174, 174, 174);
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+}
+
+.step-button:focus {
+  background-color: black;
+}
+.step-button:hover {
+  background-color: black;
+}

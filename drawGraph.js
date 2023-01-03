@@ -95,7 +95,7 @@ function setUpNavigation() {
   const numberOfSteps = drawFunctions.length;
 
   //prev and next button
-  d3.selectAll(".nav-button").on("click", function () {
+  d3.selectAll("#prev, #next").on("click", function () {
     const id = d3.select(this).attr("id");
     if (id === "next" && m1.getStep() < numberOfSteps - 1) {
       m1.drawNextStep();
@@ -111,6 +111,12 @@ function setUpNavigation() {
       m1.drawStep(i);
     });
   }
+
+  //selector
+  // d3.select("#selector").on("change", (event) => onSelect(event))
+  // function onSelect(event) {
+  //   m1.drawStep(event.target.value);
+  // }
 }
 
 function animatePath(renderedPath) {
