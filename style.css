@@ -30,10 +30,3 @@
   border: none;
   cursor: pointer;
 }
-
-.step-button:focus {
-  background-color: black;
-}
-.step-button:hover {
-  background-color: black;
-}
