@@ -1,7 +1,6 @@
-import { createTransition, TransitionsManager } from "./helper_functions.js";
-
-
-
+import TransitionsManager, {
+  createTransition,
+} from "https://vinccenttt.github.io/animated-sequencing/src/TransitionsManager.js";
 
 let dataBaseline,
   data,
@@ -47,7 +46,7 @@ const onProgressUpdate = (progress, isReversed) => {
 };
 const m1 = new TransitionsManager(drawFunctions, 0.2);
 
-function showText(){
+function showText() {
   d3.selectAll("#text-div .text").style("display", "none");
   d3.select("#text-" + m1.getStep()).style("display", "inline");
 }
@@ -103,10 +102,10 @@ function setUpVariables() {
 function setUpNavigation() {
   d3.select("#step-0").style("background-color", "black");
 
-  d3.selectAll(".step-button").on("click", function(){
+  d3.selectAll(".step-button").on("click", function () {
     d3.selectAll(".step-button").style("background-color", "#ff0000");
     d3.select(this).style("background-color", "black");
-  })
+  });
   const numberOfSteps = drawFunctions.length;
 
   //prev and next button
@@ -119,14 +118,20 @@ function setUpNavigation() {
       m1.drawPrevStep();
       showText();
     }
-    d3.selectAll(".step-button").style("background-color", "rgb(174, 174, 174)");
+    d3.selectAll(".step-button").style(
+      "background-color",
+      "rgb(174, 174, 174)"
+    );
     d3.select("#step-" + m1.getStep()).style("background-color", "black");
   });
 
   // step buttons
   for (let i = 0; i < numberOfSteps; i++) {
     d3.selectAll("#step-" + i).on("click", function () {
-      d3.selectAll(".step-button").style("background-color", "rgb(174, 174, 174)");
+      d3.selectAll(".step-button").style(
+        "background-color",
+        "rgb(174, 174, 174)"
+      );
       d3.select(this).style("background-color", "black");
       m1.drawStep(i);
       showText();
