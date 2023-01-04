@@ -1,6 +1,6 @@
 import TransitionsManager, {
   createTransition,
-} from "https://vinccenttt.github.io/animated-sequencing/src/TransitionsManager.js";
+} from "./TransitionsManager.js";
 
 let dataBaseline,
   data,
@@ -394,13 +394,13 @@ function drawStep6() {
     .attr("text-anchor", "middle")
     .text(selectedYear)
     .attr("font-size", "0.7em")
-    .attr("opacity", 0)
+    .style("opacity", 0)
     .attr("x", 14)
     .attr(
       "y",
       (d) => yScale(d3.mean(dataBaseline, (d, i) => dataBaseline[i].temp)) + 3.5
     )
-    .gsapTo(m1, { opacity: 1 }, {});
+    .gsapTo(m1, { opacity: 1 }, {autoHideOnReverseComplete: true});
 
   svg.select("#x-axis").gsapTo(m1, {
     attr: {
@@ -578,7 +578,7 @@ function drawStep7() {
       },
       {
         onReverseStart: () => {
-          svg.select("#filling-rects text").attr("opacity", 1);
+          svg.select("#filling-rects text").style("opacity", 1);
         },
       }
     ),
