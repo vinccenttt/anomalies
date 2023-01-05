@@ -1,6 +1,4 @@
-import TransitionsManager, {
-  createTransition,
-} from "./TransitionsManager.js";
+import TransitionsManager, { createTransition } from "./TransitionsManager.js";
 
 let dataBaseline,
   data,
@@ -69,7 +67,7 @@ function setUpVariables() {
 
   dataToCoCompareTo = data.filter((e) => e.year === selectedYear);
 
-  viewBox = { width: 550, height: 550, padding: 30 };
+  viewBox = { width: 550, height: 550, padding: 30, paddingRight: 70 };
   svg = d3
     .select("#visualization")
     .append("svg")
@@ -95,7 +93,7 @@ function setUpVariables() {
 
   xScale = d3
     .scaleBand()
-    .range([viewBox.padding, viewBox.width])
+    .range([viewBox.padding, viewBox.width - viewBox.paddingRight])
     .domain(dataBaseline.map((d) => d.month));
 }
 
@@ -369,6 +367,49 @@ function drawStep5() {
 }
 
 function drawStep52() {
+  const legendColorStops = 100;
+  svg
+    .append("defs")
+    .append("linearGradient")
+    .attr("id", "color-scale-gradient")
+    .attr("x1", "0%")
+    .attr("y1", "0%")
+    .attr("x2", "0%")
+    .attr("y2", "100%")
+    .selectAll("stop")
+    .data(new Array(legendColorStops))
+    .enter()
+    .append("stop")
+    .attr("offset", function (d, i) {
+      return ((i * 1) / (legendColorStops - 1)) * 100 + "%";
+    })
+    .attr("stop-color", function (d, i) {
+      return d3.interpolateRdBu((i * 1) / (legendColorStops - 1));
+    });
+
+    const offset = 10;
+  const colorLegend = svg.append("svg").attr("id", "color-legend").attr("x", viewBox.width - viewBox.paddingRight + 20).attr("y", 30-offset);
+  const height = 200;
+ 
+
+  colorLegend
+    .append("rect")
+    .attr("height", height)
+    .attr("width", 10)
+    .attr("y", offset)
+    .style("fill", "url(#color-scale-gradient)");
+
+  colorLegend
+    .selectAll("label")
+    .data([1, 0, -1])
+    .enter()
+    .append("text")
+    .text((d) => d)
+    .attr("y", (d, i) => (height / 2) * i + offset)
+    .attr("x", 18)
+    .attr("dominant-baseline", "middle")
+    .attr("font-size", "0.8em");
+
   svg.selectAll("#filling-rects rect").gsapTo(m1, (d, i) => {
     return {
       attr: {
@@ -400,7 +441,7 @@ function drawStep6() {
       "y",
       (d) => yScale(d3.mean(dataBaseline, (d, i) => dataBaseline[i].temp)) + 3.5
     )
-    .gsapTo(m1, { opacity: 1 }, {autoHideOnReverseComplete: true});
+    .gsapTo(m1, { opacity: 1 }, { autoHideOnReverseComplete: true });
 
   svg.select("#x-axis").gsapTo(m1, {
     attr: {
