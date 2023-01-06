@@ -7,7 +7,8 @@ let dataBaseline,
   xScale,
   yScale,
   dataToCoCompareTo,
-  calculateColorScaleValue;
+  calculateColorScaleValue,
+  colorScaleInterval;
 const selectedYear = 1878;
 
 fetch("./data/dataBaseline.json")
@@ -50,15 +51,20 @@ function showText() {
 }
 
 function setUpVariables() {
+  function round(number){
+    const roundTo = 10;
+    return Math.round(number * roundTo) / roundTo;
+  }
+  colorScaleInterval = {min: round(d3.min(data, (d) => d.anomaly)), max: round(d3.max(data, (d) => d.anomaly))}
   calculateColorScaleValue = (anomaly) => {
     const redScale = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.anomaly)])
+      .domain([0, colorScaleInterval.max])
       .range([0.5, 0]);
 
     const blueScale = d3
       .scaleLinear()
-      .domain([d3.min(data, (d) => d.anomaly), 0])
+      .domain([colorScaleInterval.min, 0])
       .range([1, 0.5]);
 
     if (anomaly > 0) return redScale(anomaly);
@@ -384,13 +390,17 @@ function drawStep52() {
       return ((i * 1) / (legendColorStops - 1)) * 100 + "%";
     })
     .attr("stop-color", function (d, i) {
-      return d3.interpolateRdBu((i * 1) / (legendColorStops - 1));
+      return d3.interpolateSpectral((i * 1) / (legendColorStops - 1));
     });
 
-    const offset = 10;
-  const colorLegend = svg.append("svg").attr("id", "color-legend").attr("x", viewBox.width - viewBox.paddingRight + 20).attr("y", 30-offset);
+  const offset = 10;
+  const colorLegend = svg
+    .append("svg")
+    .attr("id", "color-legend")
+    .attr("x", viewBox.width - viewBox.paddingRight + 20)
+    .attr("y", 30 - offset)
+    .attr("opactiy", 0);
   const height = 200;
- 
 
   colorLegend
     .append("rect")
@@ -401,7 +411,7 @@ function drawStep52() {
 
   colorLegend
     .selectAll("label")
-    .data([1, 0, -1])
+    .data([colorScaleInterval.max, 0, colorScaleInterval.min])
     .enter()
     .append("text")
     .text((d) => d)
@@ -410,10 +420,12 @@ function drawStep52() {
     .attr("dominant-baseline", "middle")
     .attr("font-size", "0.8em");
 
+    colorLegend.gsapTo(m1, {attr: {opacity: 1}}, {autoHideOnReverseComplete: true});
+
   svg.selectAll("#filling-rects rect").gsapTo(m1, (d, i) => {
     return {
       attr: {
-        fill: d3.interpolateRdBu(calculateColorScaleValue(d.anomaly)),
+        fill: d3.interpolateSpectral(calculateColorScaleValue(d.anomaly)),
       },
     };
   });
@@ -541,7 +553,7 @@ function drawStep7() {
     .attr("fill", (d) =>
       d.year === selectedYear
         ? "#808080"
-        : d3.interpolateRdBu(calculateColorScaleValue(d.anomaly))
+        : d3.interpolateSpectral(calculateColorScaleValue(d.anomaly))
     );
 
   const timeline = gsap.timeline();
@@ -586,7 +598,7 @@ function drawStep7() {
       {
         onComplete: () => {
           missingLine.attr("fill", (d) =>
-            d3.interpolateRdBu(calculateColorScaleValue(d.anomaly))
+            d3.interpolateSpectral(calculateColorScaleValue(d.anomaly))
           );
         },
         onStart: () => {
