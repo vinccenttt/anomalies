@@ -76,7 +76,7 @@ function setUpVariables() {
 
   dataToCoCompareTo = data.filter((e) => e.year === selectedYear);
 
-  viewBox = { width: 550, height: 550, padding: 30, paddingRight: 70 };
+  viewBox = { width: 550, height: 550, padding: 30, paddingBottom: 50, paddingRight: 70 };
   svg = d3
     .select("#visualization")
     .append("svg")
@@ -90,7 +90,7 @@ function setUpVariables() {
 
   yScale = d3
     .scaleLinear()
-    .range([viewBox.height - viewBox.padding, 200]) // add half stroke width
+    .range([viewBox.height - viewBox.paddingBottom, 200]) // add half stroke width
     .domain([
       10,
       d3.max([
@@ -164,7 +164,7 @@ function drawStep0() {
   svg
     .append("g")
     .attr("id", "x-axis")
-    .attr("transform", `translate(0,${viewBox.height - viewBox.padding})`)
+    .attr("transform", `translate(0,${viewBox.height - viewBox.paddingBottom})`)
     .call(
       d3
         .axisBottom(xScale)
@@ -477,7 +477,7 @@ function drawStep6() {
 function drawStep7() {
   const yScale = d3
     .scaleBand()
-    .range([30, viewBox.height - viewBox.padding])
+    .range([30, viewBox.height - viewBox.paddingBottom])
     .domain(data.map((d) => d.year));
 
   // one group for each year
@@ -570,11 +570,11 @@ function drawStep7() {
   // transition text
   timeline.add(gsap.to("#filling-rects text", { attr: { y: 8 } }), "<");
 
-  // move x-axis to the bottm
+  // move x-axis to the bottom
   timeline.add(
     gsap.to("#x-axis", {
       duration: 0.5,
-      attr: { transform: `translate(0,${viewBox.height - viewBox.padding})` },
+      attr: { transform: `translate(0,${viewBox.height - viewBox.paddingBottom})` },
     }),
     "<"
   );
