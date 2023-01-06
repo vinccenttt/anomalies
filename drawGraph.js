@@ -39,11 +39,14 @@ const drawFunctions = [
 const onProgressUpdate = (progress, isReversed) => {
   console.log(progress);
 
-  d3.select("#un")
-    .attr("width", progress * paddedViewBox.width)
-    .attr("fill", isReversed ? "#123456" : "#ff0000");
+  d3.select("#progress-bar")
+  .attr("x", viewBox.padding)
+  .attr("y", viewBox.height - 3)
+  .attr("height", 2)
+    .attr("width", progress * (viewBox.width - viewBox.padding - viewBox.paddingRight))
+    .attr("fill", "#80808070");
 };
-const m1 = new TransitionsManager(drawFunctions, 0.2);
+const m1 = new TransitionsManager(drawFunctions, 0.2, onProgressUpdate);
 
 function showText() {
   d3.selectAll("#text-div .text").style("display", "none");
@@ -104,12 +107,8 @@ function setUpVariables() {
 }
 
 function setUpNavigation() {
-  d3.select("#step-0").style("background-color", "black");
+  d3.select("#step-0").style("background-color", "rgb(91, 91, 91)");
 
-  d3.selectAll(".step-button").on("click", function () {
-    d3.selectAll(".step-button").style("background-color", "#ff0000");
-    d3.select(this).style("background-color", "black");
-  });
   const numberOfSteps = drawFunctions.length;
 
   //prev and next button
@@ -126,7 +125,7 @@ function setUpNavigation() {
       "background-color",
       "rgb(174, 174, 174)"
     );
-    d3.select("#step-" + m1.getStep()).style("background-color", "black");
+    d3.select("#step-" + m1.getStep()).style("background-color", "rgb(91, 91, 91)");
   });
 
   // step buttons
@@ -136,7 +135,7 @@ function setUpNavigation() {
         "background-color",
         "rgb(174, 174, 174)"
       );
-      d3.select(this).style("background-color", "black");
+      d3.select(this).style("background-color", "rgb(91, 91, 91)");
       m1.drawStep(i);
       showText();
     });
@@ -158,6 +157,9 @@ function animatePath(renderedPath) {
 }
 
 function drawStep0() {
+  svg.append("rect").attr("id", "progress-bar").attr("height", 20).attr("width", viewBox.width)
+
+
   // draw x-axis
   svg
     .append("g")
