@@ -107,7 +107,7 @@ function setUpVariables() {
 }
 
 function setUpNavigation() {
-  d3.select("#step-0").style("background-color", "rgb(91, 91, 91)");
+  d3.select("#step-0").style("background-color", "rgb(130, 130, 130)");
 
   const numberOfSteps = drawFunctions.length;
 
@@ -125,7 +125,7 @@ function setUpNavigation() {
       "background-color",
       "rgb(174, 174, 174)"
     );
-    d3.select("#step-" + m1.getStep()).style("background-color", "rgb(91, 91, 91)");
+    d3.select("#step-" + m1.getStep()).style("background-color", "rgb(130, 130, 130)");
   });
 
   // step buttons
@@ -135,7 +135,7 @@ function setUpNavigation() {
         "background-color",
         "rgb(174, 174, 174)"
       );
-      d3.select(this).style("background-color", "rgb(91, 91, 91)");
+      d3.select(this).style("background-color", "rgb(130, 130, 130)");
       m1.drawStep(i);
       showText();
     });
