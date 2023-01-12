@@ -8,7 +8,7 @@ let dataBaseline,
   yScale,
   dataToCoCompareTo,
   calculateColorScaleValue,
-  colorScaleMax;
+  anomalyAbsMax;
 const selectedYear = 1878;
 
 fetch("./data/dataBaseline.json")
@@ -40,10 +40,13 @@ const onProgressUpdate = (progress, isReversed) => {
   console.log(progress);
 
   d3.select("#progress-bar")
-  .attr("x", viewBox.padding)
-  .attr("y", viewBox.height - 3)
-  .attr("height", 2)
-    .attr("width", progress * (viewBox.width - viewBox.padding - viewBox.paddingRight))
+    .attr("x", viewBox.padding)
+    .attr("y", viewBox.height - 3)
+    .attr("height", 2)
+    .attr(
+      "width",
+      progress * (viewBox.width - viewBox.padding - viewBox.paddingRight)
+    )
     .attr("fill", "#80808070");
 };
 const m1 = new TransitionsManager(drawFunctions, 0.2, onProgressUpdate);
@@ -54,20 +57,20 @@ function showText() {
 }
 
 function setUpVariables() {
-  function round(number){
+  function round(number) {
     const roundTo = 10;
     return Math.round(number * roundTo) / roundTo;
   }
-  colorScaleMax = round(d3.max(data, (d) => Math.abs(d.anomaly)));
+  anomalyAbsMax = round(d3.max(data, (d) => Math.abs(d.anomaly)));
   calculateColorScaleValue = (anomaly) => {
     const redScale = d3
       .scaleLinear()
-      .domain([0, colorScaleMax])
+      .domain([0, anomalyAbsMax])
       .range([0.5, 0]);
 
     const blueScale = d3
       .scaleLinear()
-      .domain([-colorScaleMax, 0])
+      .domain([-anomalyAbsMax, 0])
       .range([1, 0.5]);
 
     if (anomaly > 0) return redScale(anomaly);
@@ -76,7 +79,13 @@ function setUpVariables() {
 
   dataToCoCompareTo = data.filter((e) => e.year === selectedYear);
 
-  viewBox = { width: 550, height: 550, padding: 30, paddingBottom: 50, paddingRight: 70 };
+  viewBox = {
+    width: 550,
+    height: 550,
+    padding: 30,
+    paddingBottom: 50,
+    paddingRight: 70,
+  };
   svg = d3
     .select("#visualization")
     .append("svg")
@@ -125,7 +134,10 @@ function setUpNavigation() {
       "background-color",
       "rgb(174, 174, 174)"
     );
-    d3.select("#step-" + m1.getStep()).style("background-color", "rgb(130, 130, 130)");
+    d3.select("#step-" + m1.getStep()).style(
+      "background-color",
+      "rgb(130, 130, 130)"
+    );
   });
 
   // step buttons
@@ -157,8 +169,11 @@ function animatePath(renderedPath) {
 }
 
 function drawStep0() {
-  svg.append("rect").attr("id", "progress-bar").attr("height", 20).attr("width", viewBox.width)
-
+  svg
+    .append("rect")
+    .attr("id", "progress-bar")
+    .attr("height", 20)
+    .attr("width", viewBox.width);
 
   // draw x-axis
   svg
@@ -343,14 +358,8 @@ function drawStep5() {
   // create anomaly scale
   const yScaleAnomaly = d3
     .scaleLinear()
-    .range([
-      yScale(mean + d3.min(dataToCoCompareTo, (d) => d.anomaly)),
-      yScale(mean + d3.max(dataToCoCompareTo, (d) => d.anomaly)),
-    ])
-    .domain([
-      d3.min(dataToCoCompareTo, (d) => d.anomaly),
-      d3.max(dataToCoCompareTo, (d) => d.anomaly),
-    ]);
+    .range([yScale(mean - anomalyAbsMax), yScale(mean + anomalyAbsMax)])
+    .domain([-anomalyAbsMax, anomalyAbsMax]);
 
   // create anomaly axis
   svg
@@ -358,7 +367,7 @@ function drawStep5() {
     .attr("id", "anomaly-axis")
     .attr("transform", `translate(${viewBox.padding},0)`)
     .attr("opacity", 0)
-    .call(d3.axisLeft(yScaleAnomaly).ticks(3))
+    .call(d3.axisLeft(yScaleAnomaly).ticks(5))
     .gsapTo(m1, { opacity: 1 });
 
   // translate x-axis upwards
@@ -367,9 +376,7 @@ function drawStep5() {
     .lower()
     .gsapTo(m1, {
       attr: {
-        transform: `translate(0,${yScale(
-          mean + d3.min(dataToCoCompareTo, (d) => d.anomaly)
-        )})`,
+        transform: `translate(0,${yScale(mean - anomalyAbsMax)})`,
       },
     });
 }
@@ -413,7 +420,7 @@ function drawStep52() {
 
   colorLegend
     .selectAll("label")
-    .data([colorScaleMax, 0, -colorScaleMax])
+    .data([anomalyAbsMax, 0, -anomalyAbsMax])
     .enter()
     .append("text")
     .text((d) => d)
@@ -422,7 +429,11 @@ function drawStep52() {
     .attr("dominant-baseline", "middle")
     .attr("font-size", "0.8em");
 
-    colorLegend.gsapTo(m1, {attr: {opacity: 1}}, {autoHideOnReverseComplete: true});
+  colorLegend.gsapTo(
+    m1,
+    { attr: { opacity: 1 } },
+    { autoHideOnReverseComplete: true }
+  );
 
   svg.selectAll("#filling-rects rect").gsapTo(m1, (d, i) => {
     return {
@@ -574,7 +585,9 @@ function drawStep7() {
   timeline.add(
     gsap.to("#x-axis", {
       duration: 0.5,
-      attr: { transform: `translate(0,${viewBox.height - viewBox.paddingBottom})` },
+      attr: {
+        transform: `translate(0,${viewBox.height - viewBox.paddingBottom})`,
+      },
     }),
     "<"
   );
