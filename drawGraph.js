@@ -97,7 +97,7 @@ function setUpVariables() {
   );
   const tempExtrema = { max: d3.max(temps), min: d3.min(temps) };
 
-  yScale = d3
+  const yScaleMax = (yScale = d3
     .scaleLinear()
     .range([viewBox.height - viewBox.paddingBottom, 200]) // add half stroke width
     .domain([
@@ -107,7 +107,7 @@ function setUpVariables() {
         tempExtrema.max,
         d3.max(dataBaseline, (d) => d.temp),
       ]),
-    ]);
+    ]));
 
   xScale = d3
     .scaleBand()
@@ -207,7 +207,13 @@ function drawStep0() {
     .append("g")
     .attr("id", "y-axis")
     .attr("transform", `translate(${viewBox.padding},0)`)
-    .call(d3.axisLeft(yScale));
+    .call(d3.axisLeft(yScale))
+    .append("text")
+    .text("°C")
+    .attr("font-size", "1.2em")
+    .attr("text-anchor", "middle")
+    .attr("fill", "black")
+    .attr("y", 200 - 10);
 
   // draw step chart line
   const path = d3.path();
@@ -362,13 +368,26 @@ function drawStep5() {
     .domain([-anomalyAbsMax, anomalyAbsMax]);
 
   // create anomaly axis
-  svg
+  const anomalyAxis = svg
     .append("g")
     .attr("id", "anomaly-axis")
     .attr("transform", `translate(${viewBox.padding},0)`)
-    .attr("opacity", 0)
-    .call(d3.axisLeft(yScaleAnomaly).ticks(5))
-    .gsapTo(m1, { opacity: 1 });
+    .attr("opacity", 0);
+
+  anomalyAxis
+    .call(
+      d3
+        .axisLeft(yScaleAnomaly)
+        .tickValues([-anomalyAbsMax, -0.5, 0, 0.5, anomalyAbsMax])
+    )
+    .append("text")
+    .text("°C")
+    .attr("font-size", "11px")
+    .attr("text-anchor", "middle")
+    .attr("fill", "black")
+    .attr("y", yScale(mean + anomalyAbsMax) - 10);
+
+  anomalyAxis.gsapTo(m1, { opacity: 1 }, { autoHideOnReverseComplete: true });
 
   // translate x-axis upwards
   svg
@@ -402,32 +421,66 @@ function drawStep52() {
       return d3.interpolateSpectral((i * 1) / (legendColorStops - 1));
     });
 
-  const offset = 10;
-  const colorLegend = svg
-    .append("svg")
-    .attr("id", "color-legend")
-    .attr("x", viewBox.width - viewBox.paddingRight + 20)
-    .attr("y", 30 - offset)
-    .attr("opactiy", 0);
-  const height = 200;
+  function createColorLegend() {
+    const mean = d3.mean(dataBaseline, (d) => d.temp);
+    const strokeWidth = 0.5;
 
-  colorLegend
-    .append("rect")
-    .attr("height", height)
-    .attr("width", 10)
-    .attr("y", offset)
-    .style("fill", "url(#color-scale-gradient)");
+    const colorLegend = svg
+      .append("g")
+      .attr("id", "color-legend")
+      .attr(
+        "transform",
+        `translate(${viewBox.width - viewBox.paddingRight + 20},0)`
+      )
+      .attr("opacity", 0);
 
-  colorLegend
-    .selectAll("label")
-    .data([anomalyAbsMax, 0, -anomalyAbsMax])
-    .enter()
-    .append("text")
-    .text((d) => d)
-    .attr("y", (d, i) => (height / 2) * i + offset)
-    .attr("x", 18)
-    .attr("dominant-baseline", "middle")
-    .attr("font-size", "0.8em");
+    const height = -(
+      yScale(mean + anomalyAbsMax) - yScale(mean - anomalyAbsMax)
+    );
+
+    // create unit label
+    colorLegend
+      .append("text")
+      .text("°C")
+      .attr("font-size", "11px")
+      .attr("font-family", "sans-serif")
+      .attr("fill", "black")
+      .attr("transform", `translate(0,${yScale(mean + anomalyAbsMax) - 10})`);
+
+    // create color bar
+    colorLegend
+      .append("rect")
+      .attr("stroke", "black")
+      .attr("stroke-width", strokeWidth)
+      .attr("height", height)
+      .attr("transform", `translate(2,${yScale(mean + anomalyAbsMax)})`)
+      .attr("width", 10)
+      .style("fill", "url(#color-scale-gradient)");
+
+    // create ticks and labels
+    const axis = colorLegend.append("g").call(
+      d3
+        .axisRight(
+          d3
+            .scaleLinear()
+            .range([height - strokeWidth, 0 -strokeWidth])
+            .domain([-anomalyAbsMax, anomalyAbsMax])
+        )
+        .tickValues([-anomalyAbsMax, -0.5, 0, 0.5, anomalyAbsMax])
+    );
+
+    axis.select(".domain").remove();
+    axis
+      .attr("transform", `translate(12,${yScale(mean + anomalyAbsMax)})`)
+      .selectAll(".tick line")
+      .attr("x1", -4)
+      .attr("x2", 0)
+      .attr("stroke-width", strokeWidth);
+
+    return colorLegend;
+  }
+
+  const colorLegend = createColorLegend();
 
   colorLegend.gsapTo(
     m1,
