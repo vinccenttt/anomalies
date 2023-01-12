@@ -8,7 +8,7 @@ let dataBaseline,
   yScale,
   dataToCoCompareTo,
   calculateColorScaleValue,
-  colorScaleInterval;
+  colorScaleMax;
 const selectedYear = 1878;
 
 fetch("./data/dataBaseline.json")
@@ -58,16 +58,16 @@ function setUpVariables() {
     const roundTo = 10;
     return Math.round(number * roundTo) / roundTo;
   }
-  colorScaleInterval = {min: round(d3.min(data, (d) => d.anomaly)), max: round(d3.max(data, (d) => d.anomaly))}
+  colorScaleMax = round(d3.max(data, (d) => Math.abs(d.anomaly)));
   calculateColorScaleValue = (anomaly) => {
     const redScale = d3
       .scaleLinear()
-      .domain([0, colorScaleInterval.max])
+      .domain([0, colorScaleMax])
       .range([0.5, 0]);
 
     const blueScale = d3
       .scaleLinear()
-      .domain([colorScaleInterval.min, 0])
+      .domain([-colorScaleMax, 0])
       .range([1, 0.5]);
 
     if (anomaly > 0) return redScale(anomaly);
@@ -413,7 +413,7 @@ function drawStep52() {
 
   colorLegend
     .selectAll("label")
-    .data([colorScaleInterval.max, 0, colorScaleInterval.min])
+    .data([colorScaleMax, 0, -colorScaleMax])
     .enter()
     .append("text")
     .text((d) => d)
