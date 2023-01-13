@@ -9,7 +9,7 @@ let dataBaseline,
   dataToCoCompareTo,
   calculateColorScaleValue,
   anomalyAbsMax;
-const selectedYear = 1878;
+const selectedYear = 1887;
 
 fetch("./data/dataBaseline.json")
   .then((response) => response.json())
