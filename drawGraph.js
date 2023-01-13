@@ -260,6 +260,25 @@ function drawStep3() {
     .attr("stroke-width", 2);
 
   animatePath(renderedPath);
+
+  svg
+    .append("text")
+    .attr("id", "background-year-label")
+    .text(selectedYear)
+    .attr("text-anchor", "middle")
+    .attr("y", 150)
+    .attr("font-size", 30)
+    .attr("opacity", 0)
+    .attr(
+      "x",
+      (viewBox.width - viewBox.paddingRight - viewBox.padding) / 2 +
+        viewBox.padding
+    )
+    .gsapTo(
+      m1,
+      { attr: { opacity: 0.07 } },
+      { autoHideOnReverseComplete: true }
+    );
 }
 
 function drawStep4() {
@@ -463,7 +482,7 @@ function drawStep52() {
         .axisRight(
           d3
             .scaleLinear()
-            .range([height - strokeWidth, 0 -strokeWidth])
+            .range([height - strokeWidth, 0 - strokeWidth])
             .domain([-anomalyAbsMax, anomalyAbsMax])
         )
         .tickValues([-anomalyAbsMax, -0.5, 0, 0.5, anomalyAbsMax])
@@ -531,11 +550,12 @@ function drawStep6() {
 
   // remove anomaly axis and baseline
   svg
-    .select("#baseline")
+    .selectAll("#baseline, #anomaly-axis")
     .gsapTo(m1, { opacity: 0 }, { autoHideOnComplete: true });
+
   svg
-    .select("#anomaly-axis")
-    .gsapTo(m1, { opacity: 0 }, { autoHideOnComplete: true });
+    .select("#background-year-label")
+    .gsapTo(m1, { attr: { opacity: 0 } }, { autoHideOnComplete: true });
 }
 
 function drawStep7() {
