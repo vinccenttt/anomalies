@@ -37,7 +37,6 @@ const drawFunctions = [
   drawStep7,
 ];
 const onProgressUpdate = (progress, isReversed) => {
-  console.log(progress);
 
   d3.select("#progress-bar")
     .attr("x", viewBox.padding)
@@ -120,16 +119,21 @@ function setUpNavigation() {
 
   const numberOfSteps = drawFunctions.length;
 
-  //prev and next button
-  d3.selectAll("#prev, #next").on("click", function () {
-    const id = d3.select(this).attr("id");
-    if (id === "next" && m1.getStep() < numberOfSteps - 1) {
+  const next = () =>{
+    if (m1.getStep() < numberOfSteps - 1) {
       m1.drawNextStep();
       showText();
-    } else if (id === "prev" && m1.getStep() > 0) {
+    }
+  }
+
+  const prev = () => {
+    if (m1.getStep() > 0) {
       m1.drawPrevStep();
       showText();
     }
+  }
+
+  const colorButtons = () => {
     d3.selectAll(".step-button").style(
       "background-color",
       "rgb(174, 174, 174)"
@@ -137,19 +141,39 @@ function setUpNavigation() {
     d3.select("#step-" + m1.getStep()).style(
       "background-color",
       "rgb(130, 130, 130)"
-    );
+    )
+  }
+
+  //prev and next button
+  d3.selectAll("#prev, #next").on("click", function () {
+    const id = d3.select(this).attr("id");
+    if (id === "next") {
+      next();
+    } else if (id === "prev") {
+      prev();
+    }
+    colorButtons();
+
+  });
+
+  d3.select("body").on("keydown", function (event) {
+    if (event.keyCode === 39) {
+      next();
+      colorButtons();
+    }
+
+    if (event.keyCode === 37) {
+      prev();
+      colorButtons();
+    }
   });
 
   // step buttons
   for (let i = 0; i < numberOfSteps; i++) {
     d3.selectAll("#step-" + i).on("click", function () {
-      d3.selectAll(".step-button").style(
-        "background-color",
-        "rgb(174, 174, 174)"
-      );
-      d3.select(this).style("background-color", "rgb(130, 130, 130)");
       m1.drawStep(i);
       showText();
+      colorButtons();
     });
   }
 
