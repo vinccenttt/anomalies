@@ -1,3 +1,5 @@
+import { setUpNavigation, showText } from "./navigation.js";
+
 let dataBaseline,
   data,
   viewBox,
@@ -9,6 +11,7 @@ let dataBaseline,
   anomalyAbsMax;
 const selectedYear = 1887;
 
+// wait until data is loaded
 fetch("./data/dataBaseline.json")
   .then((response) => response.json())
   .then((json) => {
@@ -18,21 +21,21 @@ fetch("./data/dataBaseline.json")
       .then((json) => {
         data = json;
         setUpVariables();
-        setUpNavigation();
-        m1.drawNextView();
-        showText();
+        setUpNavigation(manager, drawFunctions.length);
+        manager.drawNextView();
+        showText(manager);
       });
   });
 
 // setup necessary to use library
 const drawFunctions = [
-  drawStep0,
-  drawStep3,
-  drawStep4,
-  drawStep5,
-  drawStep52,
-  drawStep6,
-  drawStep7,
+  drawView0,
+  drawView1,
+  drawView2,
+  drawView3,
+  drawView4,
+  drawView5,
+  drawView6,
 ];
 const onProgressUpdate = (progress, isReversed) => {
   d3.select("#progress-bar")
@@ -45,13 +48,14 @@ const onProgressUpdate = (progress, isReversed) => {
     )
     .attr("fill", "#80808070");
 };
-const m1 = new aseq.TransitionsManager(drawFunctions, 0.2, onProgressUpdate);
 
-function showText() {
-  d3.selectAll("#text-div .text").style("display", "none");
-  d3.select("#text-" + m1.getCurrentViewNumber()).style("display", "inline");
-}
+const manager = new aseq.TransitionsManager(
+  drawFunctions,
+  0.2,
+  onProgressUpdate
+);
 
+// inital setup
 function setUpVariables() {
   function round(number) {
     const roundTo = 10;
@@ -111,73 +115,10 @@ function setUpVariables() {
     .domain(dataBaseline.map((d) => d.month));
 }
 
-function setUpNavigation() {
-  d3.select("#step-0").node().focus();
+// DRAW FUNCTIONS
 
-  // prev and next button
-  d3.selectAll("#prev, #next").on("click", function () {
-    const id = d3.select(this).attr("id");
-    if (id === "next") {
-      next();
-    } else if (id === "prev") {
-      prev();
-    }
-    colorButtons();
-  });
-
-  // arrow keys
-  d3.select("body").on("keydown", function (event) {
-    if (event.keyCode === 39) {
-      next();
-      colorButtons();
-    }
-
-    if (event.keyCode === 37) {
-      prev();
-      colorButtons();
-    }
-  });
-
-  // step buttons
-  for (let i = 0; i < drawFunctions.length; i++) {
-    d3.selectAll("#step-" + i).on("click", function () {
-      m1.drawView(i);
-      showText();
-      colorButtons();
-    });
-  }
-
-  const next = () => {
-    m1.drawNextView();
-    showText();
-  };
-
-  const prev = () => {
-    m1.drawPrevView();
-    showText();
-  };
-
-  const colorButtons = () => {
-    d3.selectAll(".step-button").node().blur();
-    d3.select("#step-" + m1.getCurrentViewNumber()).node().focus();
-  };
-
-  //selector
-  // d3.select("#selector").on("change", (event) => onSelect(event))
-  // function onSelect(event) {
-  //   m1.drawStep(event.target.value);
-  // }
-}
-
-function animatePath(renderedPath) {
-  const length = renderedPath.node().getTotalLength();
-  renderedPath
-    .attr("stroke-dasharray", length + " " + length)
-    .style("stroke-dashoffset", length)
-    .gsapTo(m1, { strokeDashoffset: 0, duration: 3, ease: "none" });
-}
-
-function drawStep0() {
+function drawView0() {
+  // create progress bar
   svg
     .append("rect")
     .attr("id", "progress-bar")
@@ -246,8 +187,8 @@ function drawStep0() {
   animatePath(renderedPath);
 }
 
-function drawStep3() {
-  // draw new step chart line
+function drawView1() {
+  // draw line for selected yeaer
   const path = d3.path();
   dataToCoCompareTo.map((d, i) => {
     if (i === 0) {
@@ -270,6 +211,7 @@ function drawStep3() {
 
   animatePath(renderedPath);
 
+  // create background year label
   svg
     .append("text")
     .attr("id", "background-year-label")
@@ -284,13 +226,13 @@ function drawStep3() {
         viewBox.padding
     )
     .gsapTo(
-      m1,
+      manager,
       { attr: { opacity: 0.07 } },
       { autoHideOnReverseComplete: true }
     );
 }
 
-function drawStep4() {
+function drawView2() {
   // fill out anomaly
   svg
     .append("g")
@@ -312,14 +254,14 @@ function drawStep4() {
       }
     })
     .attr("opacity", 0)
-    .gsapTo(m1, { attr: { opacity: 1 } });
+    .gsapTo(manager, { attr: { opacity: 1 } });
 
+  // bring lines to the front
   svg.select("#baseline").raise();
-
   svg.select("#redPath").raise();
 }
 
-function drawStep5() {
+function drawView3() {
   const blueMeanPath = d3.path();
   const mean = d3.mean(dataBaseline, (d) => d.temp);
 
@@ -339,7 +281,7 @@ function drawStep5() {
   // transition
   svg
     .select("#baseline")
-    .gsapTo(m1, { attr: { d: blueMeanPath }, strokeWidth: 1.3 });
+    .gsapTo(manager, { attr: { d: blueMeanPath }, strokeWidth: 1.3 });
 
   // create new red path to transition to
   const newRedPath = d3.path();
@@ -361,33 +303,32 @@ function drawStep5() {
     );
   });
 
-  // transition
+  // transition red path
   svg
     .select("#redPath")
     .gsapTo(
-      m1,
+      manager,
       { attr: { d: newRedPath }, opacity: 0 },
       { autoHideOnComplete: true }
     );
 
   // transition filling rects
-  svg.selectAll("#filling-rects rect").gsapTo(m1, (d, i) => {
-    const temp = dataBaseline[i].temp + d.anomaly;
-    if (dataBaseline[i].temp > temp) {
-      return { attr: { y: yScale(mean) } };
-    } else {
-      return { attr: { y: yScale(mean + d.anomaly) } };
-    }
-  });
-
   svg
     .selectAll("#filling-rects rect")
-    .gsapTo(m1, { attr: { fill: "#ff000050", stroke: "#ff0000" } });
+    .gsapTo(manager, (d, i) => {
+      const temp = dataBaseline[i].temp + d.anomaly;
+      if (dataBaseline[i].temp > temp) {
+        return { attr: { y: yScale(mean) } };
+      } else {
+        return { attr: { y: yScale(mean + d.anomaly) } };
+      }
+    })
+    .gsapTo(manager, { attr: { fill: "#ff000050", stroke: "#ff0000" } });
 
   // transition y-axis
   svg
     .select("#y-axis")
-    .gsapTo(m1, { opacity: 0 }, { autoHideOnComplete: true });
+    .gsapTo(manager, { opacity: 0 }, { autoHideOnComplete: true });
 
   // create anomaly scale
   const yScaleAnomaly = d3
@@ -415,41 +356,45 @@ function drawStep5() {
     .attr("fill", "black")
     .attr("y", yScale(mean + anomalyAbsMax) - 10);
 
-  anomalyAxis.gsapTo(m1, { opacity: 1 }, { autoHideOnReverseComplete: true });
+  anomalyAxis.gsapTo(
+    manager,
+    { opacity: 1 },
+    { autoHideOnReverseComplete: true }
+  );
 
   // translate x-axis upwards
   svg
     .select("#x-axis")
     .lower()
-    .gsapTo(m1, {
+    .gsapTo(manager, {
       attr: {
         transform: `translate(0,${yScale(mean - anomalyAbsMax)})`,
       },
     });
 }
 
-function drawStep52() {
-  const legendColorStops = 100;
-  svg
-    .append("defs")
-    .append("linearGradient")
-    .attr("id", "color-scale-gradient")
-    .attr("x1", "0%")
-    .attr("y1", "0%")
-    .attr("x2", "0%")
-    .attr("y2", "100%")
-    .selectAll("stop")
-    .data(new Array(legendColorStops))
-    .enter()
-    .append("stop")
-    .attr("offset", function (d, i) {
-      return ((i * 1) / (legendColorStops - 1)) * 100 + "%";
-    })
-    .attr("stop-color", function (d, i) {
-      return d3.interpolateSpectral((i * 1) / (legendColorStops - 1));
-    });
-
+function drawView4() {
   function createColorLegend() {
+    const legendColorStops = 100;
+    svg
+      .append("defs")
+      .append("linearGradient")
+      .attr("id", "color-scale-gradient")
+      .attr("x1", "0%")
+      .attr("y1", "0%")
+      .attr("x2", "0%")
+      .attr("y2", "100%")
+      .selectAll("stop")
+      .data(new Array(legendColorStops))
+      .enter()
+      .append("stop")
+      .attr("offset", function (d, i) {
+        return ((i * 1) / (legendColorStops - 1)) * 100 + "%";
+      })
+      .attr("stop-color", function (d, i) {
+        return d3.interpolateSpectral((i * 1) / (legendColorStops - 1));
+      });
+
     const mean = d3.mean(dataBaseline, (d) => d.temp);
     const strokeWidth = 0.5;
 
@@ -509,14 +454,14 @@ function drawStep52() {
   }
 
   const colorLegend = createColorLegend();
-
   colorLegend.gsapTo(
-    m1,
+    manager,
     { attr: { opacity: 1 } },
     { autoHideOnReverseComplete: true }
   );
 
-  svg.selectAll("#filling-rects rect").gsapTo(m1, (d, i) => {
+  // fill rects according to color scale
+  svg.selectAll("#filling-rects rect").gsapTo(manager, (d, i) => {
     return {
       attr: {
         fill: d3.interpolateSpectral(calculateColorScaleValue(d.anomaly)),
@@ -525,9 +470,9 @@ function drawStep52() {
   });
 }
 
-function drawStep6() {
+function drawView5() {
   // transition filling rects to all have the same height
-  svg.selectAll("#filling-rects rect").gsapTo(m1, {
+  svg.selectAll("#filling-rects rect").gsapTo(manager, {
     attr: {
       y: yScale(d3.mean(dataBaseline, (d, i) => dataBaseline[i].temp)) - 10,
       height: 20,
@@ -535,6 +480,7 @@ function drawStep6() {
     },
   });
 
+  // add year label
   svg
     .select("#filling-rects")
     .append("text")
@@ -547,9 +493,10 @@ function drawStep6() {
       "y",
       (d) => yScale(d3.mean(dataBaseline, (d, i) => dataBaseline[i].temp)) + 3.5
     )
-    .gsapTo(m1, { opacity: 1 }, { autoHideOnReverseComplete: true });
+    .gsapTo(manager, { opacity: 1 }, { autoHideOnReverseComplete: true });
 
-  svg.select("#x-axis").gsapTo(m1, {
+  // translate x-axis
+  svg.select("#x-axis").gsapTo(manager, {
     attr: {
       transform: `translate(0,${
         yScale(d3.mean(dataBaseline, (d) => d.temp)) + 10
@@ -560,14 +507,14 @@ function drawStep6() {
   // remove anomaly axis and baseline
   svg
     .selectAll("#baseline, #anomaly-axis")
-    .gsapTo(m1, { opacity: 0 }, { autoHideOnComplete: true });
+    .gsapTo(manager, { opacity: 0 }, { autoHideOnComplete: true });
 
   svg
     .select("#background-year-label")
-    .gsapTo(m1, { attr: { opacity: 0 } }, { autoHideOnComplete: true });
+    .gsapTo(manager, { attr: { opacity: 0 } }, { autoHideOnComplete: true });
 }
 
-function drawStep7() {
+function drawView6() {
   const yScale = d3
     .scaleBand()
     .range([30, viewBox.height - viewBox.paddingBottom])
@@ -735,5 +682,13 @@ function drawStep7() {
     "<"
   );
 
-  m1.push(timeline);
+  manager.push(timeline);
+}
+
+function animatePath(renderedPath) {
+  const length = renderedPath.node().getTotalLength();
+  renderedPath
+    .attr("stroke-dasharray", length + " " + length)
+    .style("stroke-dashoffset", length)
+    .gsapTo(manager, { strokeDashoffset: 0, duration: 3, ease: "none" });
 }
