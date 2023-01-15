@@ -1,7 +1,3 @@
-import TransitionsManager, {
-  createTransition,
-} from "https://vinccenttt.github.io/animated-sequencing/src/TransitionsManager.js";
-
 let dataBaseline,
   data,
   viewBox,
@@ -49,7 +45,7 @@ const onProgressUpdate = (progress, isReversed) => {
     )
     .attr("fill", "#80808070");
 };
-const m1 = new TransitionsManager(drawFunctions, 0.2, onProgressUpdate);
+const m1 = new aseq.TransitionsManager(drawFunctions, 0.2, onProgressUpdate);
 
 function showText() {
   d3.selectAll("#text-div .text").style("display", "none");
@@ -694,7 +690,7 @@ function drawStep7() {
 
   // transition block line to missing space
   timeline.add(
-    createTransition(
+    aseq.createTransition(
       "#filling-rects rect",
       {
         onComplete: () => {
@@ -719,7 +715,7 @@ function drawStep7() {
   );
   // transition text
   timeline.add(
-    createTransition(
+    aseq.createTransition(
       "#filling-rects text",
       {
         attr: { y: yScale(selectedYear) + 4 },
