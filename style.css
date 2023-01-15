@@ -15,7 +15,8 @@
   display: none;
 }
 
-.nav-button:hover, .step-button:hover {
+.nav-button:hover, .step-button:hover, .step-button:focus {
+  outline: none;
   background-color: rgb(130, 130, 130);
 }
 

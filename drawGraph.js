@@ -1,4 +1,6 @@
-import TransitionsManager, { createTransition } from "./TransitionsManager.js";
+import TransitionsManager, {
+  createTransition,
+} from "https://vinccenttt.github.io/animated-sequencing/src/TransitionsManager.js";
 
 let dataBaseline,
   data,
@@ -21,7 +23,7 @@ fetch("./data/dataBaseline.json")
         data = json;
         setUpVariables();
         setUpNavigation();
-        m1.drawNextStep();
+        m1.drawNextView();
         showText();
       });
   });
@@ -37,7 +39,6 @@ const drawFunctions = [
   drawStep7,
 ];
 const onProgressUpdate = (progress, isReversed) => {
-
   d3.select("#progress-bar")
     .attr("x", viewBox.padding)
     .attr("y", viewBox.height - 3)
@@ -52,7 +53,7 @@ const m1 = new TransitionsManager(drawFunctions, 0.2, onProgressUpdate);
 
 function showText() {
   d3.selectAll("#text-div .text").style("display", "none");
-  d3.select("#text-" + m1.getStep()).style("display", "inline");
+  d3.select("#text-" + m1.getCurrentViewNumber()).style("display", "inline");
 }
 
 function setUpVariables() {
@@ -115,36 +116,9 @@ function setUpVariables() {
 }
 
 function setUpNavigation() {
-  d3.select("#step-0").style("background-color", "rgb(130, 130, 130)");
+  d3.select("#step-0").node().focus();
 
-  const numberOfSteps = drawFunctions.length;
-
-  const next = () =>{
-    if (m1.getStep() < numberOfSteps - 1) {
-      m1.drawNextStep();
-      showText();
-    }
-  }
-
-  const prev = () => {
-    if (m1.getStep() > 0) {
-      m1.drawPrevStep();
-      showText();
-    }
-  }
-
-  const colorButtons = () => {
-    d3.selectAll(".step-button").style(
-      "background-color",
-      "rgb(174, 174, 174)"
-    );
-    d3.select("#step-" + m1.getStep()).style(
-      "background-color",
-      "rgb(130, 130, 130)"
-    )
-  }
-
-  //prev and next button
+  // prev and next button
   d3.selectAll("#prev, #next").on("click", function () {
     const id = d3.select(this).attr("id");
     if (id === "next") {
@@ -153,9 +127,9 @@ function setUpNavigation() {
       prev();
     }
     colorButtons();
-
   });
 
+  // arrow keys
   d3.select("body").on("keydown", function (event) {
     if (event.keyCode === 39) {
       next();
@@ -169,13 +143,28 @@ function setUpNavigation() {
   });
 
   // step buttons
-  for (let i = 0; i < numberOfSteps; i++) {
+  for (let i = 0; i < drawFunctions.length; i++) {
     d3.selectAll("#step-" + i).on("click", function () {
-      m1.drawStep(i);
+      m1.drawView(i);
       showText();
       colorButtons();
     });
   }
+
+  const next = () => {
+    m1.drawNextView();
+    showText();
+  };
+
+  const prev = () => {
+    m1.drawPrevView();
+    showText();
+  };
+
+  const colorButtons = () => {
+    d3.selectAll(".step-button").node().blur();
+    d3.select("#step-" + m1.getCurrentViewNumber()).node().focus();
+  };
 
   //selector
   // d3.select("#selector").on("change", (event) => onSelect(event))
