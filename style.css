@@ -15,7 +15,7 @@
   display: none;
 }
 
-.nav-button:hover {
+.nav-button:hover, .step-button:hover {
   background-color: rgb(130, 130, 130);
 }
 
