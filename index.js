@@ -97,17 +97,24 @@ function setUpVariables() {
   );
   const tempExtrema = { max: d3.max(temps), min: d3.min(temps) };
 
-  const yScaleMax = (yScale = d3
+  // necessary so line does not start on x axis
+  const extraspace = 0.1;
+
+  yScale = d3
     .scaleLinear()
     .range([viewBox.height - viewBox.paddingBottom, 200]) // add half stroke width
     .domain([
-      10,
+      Math.floor(d3.min([
+        mean + d3.min(dataToCoCompareTo, (d) => d.anomaly),
+        tempExtrema.min,
+        d3.min(dataBaseline, (d) => d.temp),
+      ]) - extraspace),
       d3.max([
         mean + d3.max(dataToCoCompareTo, (d) => d.anomaly),
         tempExtrema.max,
         d3.max(dataBaseline, (d) => d.temp),
-      ]),
-    ]));
+      ]) + extraspace,
+    ]);
 
   xScale = d3
     .scaleBand()
