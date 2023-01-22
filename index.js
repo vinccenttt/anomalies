@@ -16,7 +16,7 @@ fetch("./data/dataBaseline.json")
   .then((response) => response.json())
   .then((json) => {
     dataBaseline = json;
-    fetch("./data/data.json")
+    fetch("./data/new_data.json")
       .then((response) => response.json())
       .then((json) => {
         data = json;
