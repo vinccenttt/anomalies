@@ -1,12 +1,13 @@
 .nav-button {
   color: white;
   background-color: rgb(174, 174, 174);
-  padding: 5px;
+  padding: 3px;
   padding-left: 10px;
   padding-right: 10px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-size: 1em;
 }
 
 .text {
