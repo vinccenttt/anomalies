@@ -32,3 +32,5 @@
   border: none;
   cursor: pointer;
 }
+
+a { color: inherit; } 
