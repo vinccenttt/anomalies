@@ -689,7 +689,7 @@ function drawView6() {
     "<"
   );
 
-  manager.push(timeline);
+  manager.storeTransition(timeline);
 }
 
 function animatePath(renderedPath) {
